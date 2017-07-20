@@ -28,12 +28,12 @@ import type {DocumentNode} from 'graphql';
 // Throws an error if parsing the file fails
 function parseFile(baseDir: string, file: File, text: string): ?DocumentNode {
 
-  invariant(
-    text.indexOf('graphql') >= 0,
-    'RelayFileIRParser: Files should be filtered before passed to the ' +
-      'parser, got unfiltered file `%s`.',
-    file,
-  );
+  // invariant(
+  //   text.indexOf('graphql') >= 0,
+  //   'RelayFileIRParser: Files should be filtered before passed to the ' +
+  //     'parser, got unfiltered file `%s`.',
+  //   file,
+  // );
 
   const astDefinitions = [];
   FindGraphQLTags.memoizedFind(
@@ -84,10 +84,11 @@ function getParser(transformModules: Array<string> = []) {
     const transformer = getTransformer(baseDir, transformModules)
     return new FileParser({
       baseDir,
-      parse: (filename: string) => {
-        console.log('Trying to read', filename)
-        const text = fs.readFileSync(filename, 'utf8');
-        return parseFile(filename, transformer(filename, text))
+      parse: (baseDir: string, file: File) => {
+        const fileName = path.join(baseDir, file.relPath)
+        const text = fs.readFileSync(fileName, 'utf8');
+        const transformerResult = transformer(fileName, text)
+        return parseFile(baseDir, file, transformerResult)
       },
     });
   }
